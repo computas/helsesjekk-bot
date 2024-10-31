@@ -68,10 +68,12 @@ jobs:
 
       - name: Update Kubernetes Deployment and Apply Resources
         run: |
-          kubectl config set-context --current --namespace=${{ env.NAMESPACE }} 
+          kubectl config set-context --current --namespace=${{ env.NAMESPACE }}
+
+          # Replace placeholder in deployment file with actual image name
           sed -i "s,FULL_IMAGE_NAME,${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/aksjer/chubben-aksjer:${{ github.sha }},g" k8s/deployment.yaml
 
-          # Inject environment variables from GitHub secrets
+          # Create or update Kubernetes secret with necessary environment variables from GitHub secrets
           kubectl create secret generic helsesjekk-secrets \
             --from-literal=NAIS_DATABASE_HELSESJEKK_BOT_HELSESJEKK_BOT_URL=${{ secrets.NAIS_DATABASE_HELSESJEKK_BOT_HELSESJEKK_BOT_URL }} \
             --from-literal=SLACK_SIGNING_SECRET=${{ secrets.SLACK_SIGNING_SECRET }} \
@@ -79,4 +81,5 @@ jobs:
             --from-literal=SLACK_APP_TOKEN=${{ secrets.SLACK_APP_TOKEN }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+          # Apply the Kubernetes configuration
           kubectl apply -f k8s/ --namespace=${{ env.NAMESPACE }}
